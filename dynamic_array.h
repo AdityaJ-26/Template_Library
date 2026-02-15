@@ -93,18 +93,13 @@ class DynamicArray {
             theSize++;
         }  
         void insert(const size_t index, const _type element) {
-            if (index < 0 || index >= theSize) {
-                throw Error{"(OutofBound) : operator[](index), index !in [0, theSize)"};
-            }
+            if (index < 0 || index >= theSize) 
+                { throw Error{"(OutofBound) : operator[](index), index !in [0, theSize)"}; }
             if (theSize == theCapacity)
                 { reserve(theSize*2); }
-            for (size_t i{ 0 }; i<theSize; i++) {
-                if (i == index) {
-                    for (size_t j{ theSize }; j>index; j++)
-                        { objects[j] = objects[j-1]; }
-                    objects[index] = element;
-                }
-            } 
+            for (size_t j{ theSize }; j>index; j++)
+                { objects[j] = objects[j-1]; }
+            objects[index] = element;
             theSize++;
         }
         //deletion
@@ -113,18 +108,23 @@ class DynamicArray {
                 { throw Error{"(Underflow) : DynamicArray(theSize) < 0"}; }
             theSize--; 
         }
+        void erase(const int index) {
+            if (index >= theSize || index < 0)
+                { throw Error{"(OutofBound) : operator[](index), index !in [0, theSize)"}; }
+            for (size_t i{ index }; i<theSize-1; i++)
+                { array[i] = array[i+1]};
+            theSize--;
+        }
 
         //operators
         const _type& operator[] (const int index) const {
-            if (index < 0 || index >= theSize) {
-                throw Error{"(OutofBound) : operator[](index), index !in [0, theSize)"};
-            }
+            if (index < 0 || index >= theSize)
+                { throw Error{"(OutofBound) : operator[](index), index !in [0, theSize)"}; }
             return objects[index]; 
         }
         _type& operator[] (const int index) { 
-            if (index < 0 || index >= theSize) {
-                throw Error{"(OutofBound) : operator[](index), index !in [0, theSize)"};
-            }
+            if (index < 0 || index >= theSize)
+                { throw Error{"(OutofBound) : operator[](index), index !in [0, theSize)"}; }
             return objects[index]; 
         }
         void operator = (const DynamicArray& obj) {
