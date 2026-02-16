@@ -20,12 +20,12 @@ class List {
         -> push_back(), push_front() - (&, &&) ||  pop_back(), pop_back()
         -> insert() - (&, && ) || erase(), erase(ranged)
         -> front(), end()
+        -> find()
 
         class const_iterator {
             public:
                 -> default constructor
-                -> operator*, ==, !=, ++ (post&pre)
-                -> 
+                -> operator*, +, ==, !=, ++ , --(post&pre)
             protected:
                 { Node* current }
                 -> parameterised constructor
@@ -35,16 +35,17 @@ class List {
         class iterator public:const_iterator {
             public:
                 -> operator* (mutator and accessor)
+                -> redefined operator --, ++, +
             protected:
                 -> parametrised constructor
         };
 };
 */
 
-// Missing 
+// Missing / Problem
 /*
 -> print()
-->
+-> copy constructor
 */
 
 #ifndef LIST_H
@@ -99,13 +100,13 @@ class List{
         void push_back(_type&& obj)
             { insert(end(), std::move(obj)); }
         void pop_back()
-            { erase(end()); }
+            { erase(--end()); }
 
         // initialiser
         void init() {
             this->_size = 0;
-            this->head = new Node;
-            this->tail = new Node;
+            this->head = new Node(0);
+            this->tail = new Node(0);
             head->next = tail;
             tail->prev = head;
         }
@@ -114,8 +115,8 @@ class List{
             { init(); }
         List(const List& l) {
             init();
-            for (auto& x : l) 
-                this->push_back(begin(), x);
+            for (auto itr = l.begin(); itr!=l.end(); l++) 
+                this->push_front(*itr);
         }
         List(List&& l) : _size{ l._size }, head{ l.head }, tail{ l.tail } {
             l._size = 0;
@@ -123,20 +124,21 @@ class List{
             l.tail = nullptr;
         }
         List& operator = (const List& l) {
-            List copy = l;
+            List<_type> copy = l;
             std::swap(*this, copy);
             return *this;
         }
         List& operator = (List&& l) {
             std::swap(_size, l._size);
             std::swap(head, l.head);
-            std::swap(tail. l.tail);
+            std::swap(tail, l.tail);
             return *this;
         }
         ~List() {
             clear();
             delete head;
             delete tail;
+            head = tail = nullptr;  
         }
 
         // common functions
@@ -150,14 +152,14 @@ class List{
             }
         }
         
-        //const_iterator
+                //const_iterator
         class const_iterator {
             public:
                 const_iterator() = default;
                 //operator overloading
                 const _type& operator* () const
                     { return this->retrieve(); }
-                const_iterator& operator++ () {
+                const_iterator operator++ () {
                     current = current->next;
                     return *this;
                 }
@@ -166,8 +168,22 @@ class List{
                     ++(*this);
                     return retPtr;
                 }
+                const_iterator operator-- () {
+                    current = current->prev;
+                    return *this;
+                }
+                const_iterator operator-- (int) {
+                    const_iterator retPtr = *this;
+                    --(*this);
+                    return retPtr;
+                }
+                const_iterator operator+ (int inc) {
+                    for (int i=1; i<=inc; i++)
+                        { ++(*this); }
+                    return (*this);
+                }
                 bool operator== (const const_iterator& itr)
-                    { return (this->current = itr.current); }
+                    { return (this->current == itr.current); }
                 bool operator!= (const const_iterator& itr)
                     { return !(*this == itr); }
             protected:
@@ -181,11 +197,34 @@ class List{
         // iterator
         class iterator : public const_iterator {
             public:
-                // operator redefined to give mutator values
+                // operator redefined to give iterator values
                 _type& operator* () 
                     { return const_iterator::retrieve(); }
                 const _type& operator* () const
                     { return const_iterator::operator*(); }
+                iterator operator++ () {
+                    const_iterator::current = const_iterator::current->next;
+                    return *this;
+                }
+                iterator operator++ (int) {
+                    iterator retPtr = *this;
+                    ++(*this);
+                    return retPtr;
+                }
+                iterator operator-- () {
+                    const_iterator::current = const_iterator::current->prev;
+                    return *this;
+                }
+                iterator operator-- (int) {
+                    iterator retPtr = *this;
+                    --(*this);
+                    return retPtr;
+                }
+                iterator operator+ (int inc) {
+                    for (int i=1; i<=inc; i++)
+                        { ++(*this); }
+                    return (*this);
+                }
             protected:
                 iterator(Node* ptr) : const_iterator{ptr} {}
             friend class List<_type>;
@@ -194,16 +233,18 @@ class List{
         // insert function - adds at index; returns index of new Object added
         iterator insert(iterator itr, const _type& obj) {
             Node* p = itr.current;
-            Node* newNode = new Node(obj, itr, itr->prev);
-            p->prev->next = p->prev = newNode;
+            Node* newNode = new Node(obj, p, p->prev);
+            p->prev->next = newNode;
+            p->prev = newNode;
             this->_size++;
             return iterator(newNode);
         }
         // insert for rvalue
         iterator insert(iterator itr, _type&& obj) {
             Node* p = itr.current;
-            Node* newNode = new Node(std::move(obj));
-            p->prev->next = p->prev = newNode;
+            Node* newNode = new Node(std::move(obj), p, p->prev);
+            p->prev->next = newNode;
+            p->prev = newNode;
             this->_size++;
             return iterator(newNode);
         }
@@ -218,9 +259,17 @@ class List{
             return retItr;
         }
         // erase - ranged
-        iterator erase(iterator start, iterator& end) {
+        iterator erase(iterator start, iterator end) {
             while(start != end) {
                 start = erase(start);
+            }
+            return end;
+        }
+        iterator find(iterator start, iterator end, const _type& obj) {
+            while (start != end) {
+                if (*start == obj)
+                    { return start; }
+                start++;
             }
             return end;
         }
