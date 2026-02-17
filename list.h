@@ -1,4 +1,8 @@
 // [ Doubly Linked List Template Implementation ]
+/* 
+- Double linked list implementation with insertion, deletion and iterators implemented
+- Recreation of C++ STL std::list
+*/
 
 // Structure
 /*
