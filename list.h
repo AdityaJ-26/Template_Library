@@ -306,6 +306,8 @@ class List{
             temp->prev->next = temp->next;
             temp->next->prev = temp->prev;
             delete temp;
+            temp = nullptr;
+            itr.current = nullptr;
             this->_size--;
             return retItr;
         }
