@@ -50,6 +50,7 @@ class List {
 /*
 -> print()
 -> copy constructor
+-> comparator
 */
 
 #ifndef LIST_H

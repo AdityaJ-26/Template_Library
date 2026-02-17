@@ -40,6 +40,7 @@ class List {
 -> vector, array comparison
 -> sorts
 -> error checks
+-> comparator
 */
 
 #ifndef ARRAY_H
