@@ -1,6 +1,7 @@
 // [ Doubly Linked List Template Implementation ]
 /* 
 - Double linked list implementation with insertion, deletion and iterators implemented
+- implemented iteration with bound checks and related function
 - Recreation of C++ STL std::list
 */
 
@@ -31,9 +32,10 @@ class List {
                 -> default constructor
                 -> operator*, +, ==, !=, ++ , --(post&pre)
             protected:
-                { Node* current }
+                { Node* current, List<_type>* theList }
                 -> parameterised constructor
                 -> retrieve()
+                -> isValid()
             friend List<_type>
         };
         class iterator public:const_iterator {
@@ -57,6 +59,17 @@ class List {
 #define LIST_H
 
 #include <iostream>
+#include <string>
+
+class Error {
+    private:
+        std::string errStatement;
+    public:
+        Error(const std::string& err) : errStatement{"_exceptional_error_ : " + err} {}
+        Error(std::string&& err) : errStatement{"_exceptional_error_ : " + std::move(err)} {}
+        const std::string& what()
+            { return errStatement; }
+};
 
 template <typename _type>
 class List{
@@ -77,13 +90,13 @@ class List{
 
         //iterator functions
         iterator begin() 
-            { return iterator{this->head->next}; }
+            { return iterator{this->head->next, this}; }
         const_iterator begin() const
-            { return const_iterator{this->head->next}; }
+            { return const_iterator{this->head->next, this}; }
         iterator end()
-            { return iterator{this->tail}; }
+            { return iterator{this->tail, this}; }
         const_iterator end() const
-            { return const_iterator{this->tail}; }
+            { return const_iterator{this->tail, this}; }
 
         //list manipulators
         _type& front() 
@@ -157,45 +170,61 @@ class List{
             }
         }
         
-                //const_iterator
+        //const_iterator
         class const_iterator {
             public:
                 const_iterator() = default;
                 //operator overloading
-                const _type& operator* () const
-                    { return this->retrieve(); }
+                const _type& operator* () const {
+                    isValid();
+                    return this->retrieve(); 
+                }
                 const_iterator operator++ () {
+                    isValid();
                     current = current->next;
                     return *this;
                 }
                 const_iterator operator++ (int) {
+                    isValid();
                     const_iterator retPtr = *this;
                     ++(*this);
                     return retPtr;
                 }
                 const_iterator operator-- () {
+                    isValid();
                     current = current->prev;
                     return *this;
                 }
                 const_iterator operator-- (int) {
+                    isValid();
                     const_iterator retPtr = *this;
                     --(*this);
                     return retPtr;
                 }
                 const_iterator operator+ (int inc) {
+                    isValid();
                     for (int i=1; i<=inc; i++)
                         { ++(*this); }
                     return (*this);
                 }
-                bool operator== (const const_iterator& itr)
-                    { return (this->current == itr.current); }
-                bool operator!= (const const_iterator& itr)
-                    { return !(*this == itr); }
+                bool operator== (const const_iterator& itr) {
+                    isValid();
+                    return (this->current == itr.current); 
+                }
+                bool operator!= (const const_iterator& itr) {
+                    isValid();
+                    return !(*this == itr); 
+                }
             protected:
+                const List<_type>* theList;
                 Node* current;
-                const_iterator(Node* ptr) : current{ptr} {}
+                const_iterator(Node* ptr, List<_type>* theList) : current{ptr}, theList{theList} {}
                 _type& retrieve()
                     { return this->current->data; }
+                void isValid() const {
+                    if (this->theList == nullptr || this->current == nullptr || this->current == theList->head)
+                        { throw Error{"IteratorOutOfBoundException [ iterator does not point to valid address in List ]"}}
+                }
             friend class List<_type>;   //friend so that List can access protected members
         };
 
@@ -208,35 +237,44 @@ class List{
                 const _type& operator* () const
                     { return const_iterator::operator*(); }
                 iterator operator++ () {
+                    isValid();
                     const_iterator::current = const_iterator::current->next;
                     return *this;
                 }
                 iterator operator++ (int) {
+                    isValid();
                     iterator retPtr = *this;
                     ++(*this);
                     return retPtr;
                 }
                 iterator operator-- () {
+                    isValid();
                     const_iterator::current = const_iterator::current->prev;
                     return *this;
                 }
                 iterator operator-- (int) {
+                    isValid();
                     iterator retPtr = *this;
                     --(*this);
                     return retPtr;
                 }
                 iterator operator+ (int inc) {
+                    isValid();
                     for (int i=1; i<=inc; i++)
                         { ++(*this); }
                     return (*this);
                 }
             protected:
-                iterator(Node* ptr) : const_iterator{ptr} {}
+                iterator(Node* ptr, List<_type>* theList) : const_iterator{ptr}, theList{theList} {}
             friend class List<_type>;
         };
         
         // insert function - adds at index; returns index of new Object added
         iterator insert(iterator itr, const _type& obj) {
+            itr.isValid();
+            if (itr.theList != this) {
+                throw Error{"IteratorMismatchException [iterator doesn't belong to the List]"}
+            }
             Node* p = itr.current;
             Node* newNode = new Node(obj, p, p->prev);
             p->prev->next = newNode;
@@ -246,6 +284,10 @@ class List{
         }
         // insert for rvalue
         iterator insert(iterator itr, _type&& obj) {
+            itr.isValid();
+            if (itr.theList != this) {
+                throw Error{"IteratorMismatchException [iterator doesn't belong to the List]"}
+            }
             Node* p = itr.current;
             Node* newNode = new Node(std::move(obj), p, p->prev);
             p->prev->next = newNode;
@@ -255,6 +297,10 @@ class List{
         }
         // erase - remove current node and returns next node iterator
         iterator erase(iterator itr) {
+            itr.isValid();
+            if (itr.theList != this) {
+                throw Error{"IteratorMismatchException [iterator doesn't belong to the List]"}
+            }
             Node* temp = itr.current;
             iterator retItr{ temp->next };
             temp->prev->next = temp->next;
@@ -265,12 +311,21 @@ class List{
         }
         // erase - ranged
         iterator erase(iterator start, iterator end) {
+            itr.isValid();
+            if (itr.theList != this) {
+                throw Error{"IteratorMismatchException [iterator doesn't belong to the List]"}
+            }
             while(start != end) {
                 start = erase(start);
             }
             return end;
         }
         iterator find(iterator start, iterator end, const _type& obj) {
+            start.isValid();
+            end.isValid();
+            if (start.theList != this || end.theList != this) {
+                throw Error{"IteratorMismatchException [iterator doesn't belong to the List]"}
+            }
             while (start != end) {
                 if (*start == obj)
                     { return start; }
