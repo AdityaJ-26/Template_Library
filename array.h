@@ -46,7 +46,6 @@ class List {
 #ifndef ARRAY_H
 #define ARRAY_H
 
-#include <iostream>
 #include <string>
 
 constexpr int INITIAL_CAPACITY = 2;
@@ -143,7 +142,7 @@ class Array {
         }  
         void insert(const size_t index, const _type& element) {
             if (index < 0 || index >= theSize) 
-                { throw Error{"(OutofBound) : operator[](index), index !in [0, theSize)"}; }
+                { throw Error{"(OutofBound) : operator[](index), index !in [0, array.size())"}; }
             if (theSize == theCapacity)
                 { reserve(theSize*2); }
             for (size_t j{ theSize }; j>index; j--)
@@ -162,7 +161,7 @@ class Array {
         }
         void erase(const int index) {
             if (index >= theSize || index < 0)
-                { throw Error{"(OutofBound) : operator[](index), index !in [0, theSize)"}; }
+                { throw Error{"(OutofBound) : operator[](index), index !in [0, array.size())"}; }
             for (size_t i{ index }; i<theSize-1; i++)
                 { objects[i] = objects[i+1]; }
             theSize--;
@@ -171,12 +170,12 @@ class Array {
         //operators
         const _type& operator[] (const int index) const {
             if (index < 0 || index >= theSize)
-                { throw Error{"(OutofBound) : operator[](index), index !in [0, theSize)"}; }
+                { throw Error{"(OutofBound) : operator[](index), index !in [0, array.size())"}; }
             return objects[index]; 
         }
         _type& operator[] (const int index) { 
             if (index < 0 || index >= theSize)
-                { throw Error{"(OutofBound) : operator[](index), index !in [0, theSize)"}; }
+                { throw Error{"(OutofBound) : operator[](index), index !in [0, array.size())"}; }
             return objects[index]; 
         }
         void operator = (const Array& obj) {
