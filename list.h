@@ -80,7 +80,7 @@ class List{
             Node(const _type& d = _type{}, Node* n = nullptr, Node* p = nullptr) : 
                                             data{d}, next{n}, prev{p} {}
             Node(_type&& d, Node* n = nullptr, Node* p = nullptr) :
-                                             data{std::move(d)}, next{n}, prev{p} {}
+                                            data{std::move(d)}, next{n}, prev{p} {}
         };
 
     public:
